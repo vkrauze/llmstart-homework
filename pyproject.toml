@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telegram-llm-assistant"
+version = "0.1.0"
+description = "LLM-ассистент для консультаций клиентов в Telegram"
+requires-python = ">=3.9"
+dependencies = [
+    "aiogram>=3.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.setuptools]
+packages = ["src"]
