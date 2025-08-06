@@ -8,6 +8,9 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 
+from llm import generate_response
+from prompts import create_messages_for_llm
+
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,15 +37,33 @@ async def cmd_start(message: types.Message) -> None:
     """
     Обработчик команды /start
     """
-    await message.answer("Привет! Я эхо-бот. Напишите мне что-нибудь.")
+    await message.answer("Здравствуйте! Я ассистент компании ООО \"ТехноСервис\". Чем я могу вам помочь?")
     logger.info(f"Пользователь {message.from_user.id} запустил бота")
 
 async def echo(message: types.Message) -> None:
     """
     Обработчик всех текстовых сообщений
     """
-    await message.answer(message.text)
-    logger.info(f"Пользователь {message.from_user.id} отправил сообщение: {message.text}")
+    user_id = message.from_user.id
+    user_text = message.text
+    
+    logger.info(f"Пользователь {user_id} отправил сообщение: {user_text}")
+    
+    # Отправляем индикатор набора текста
+    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    
+    # Создаем сообщения для LLM
+    messages = create_messages_for_llm(user_text)
+    
+    # Получаем ответ от LLM
+    response = await generate_response(messages)
+    
+    if response:
+        await message.answer(response)
+        logger.info(f"Отправлен ответ LLM пользователю {user_id}")
+    else:
+        await message.answer("Извините, произошла ошибка. Попробуйте позже или обратитесь к менеджеру.")
+        logger.error(f"Ошибка при получении ответа от LLM для пользователя {user_id}")
 
 async def start_polling() -> None:
     """

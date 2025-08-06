@@ -8,6 +8,7 @@ import asyncio
 import logging
 from dotenv import load_dotenv
 from bot import init_bot, start_polling
+from llm import init_llm
 
 # Загрузка переменных окружения из .env файла
 import os.path
@@ -28,19 +29,32 @@ async def main() -> None:
     """
     Основная функция для запуска бота
     """
-    # Получение токена из переменных окружения
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
+    # Получение токена Telegram из переменных окружения
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not telegram_token:
         # Если токен не найден в .env, предложим ввести его вручную
         logger.warning("Токен бота не найден в .env файле")
         print("Введите токен Telegram бота:")
-        token = input()
-        if not token:
+        telegram_token = input()
+        if not telegram_token:
             logger.error("Токен не был введен")
             return
     
+    # Получение API ключа OpenRouter
+    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+    if not openrouter_api_key:
+        logger.warning("API ключ OpenRouter не найден в .env файле")
+        print("Введите API ключ OpenRouter:")
+        openrouter_api_key = input()
+        if not openrouter_api_key:
+            logger.error("API ключ OpenRouter не был введен")
+            return
+    
+    # Инициализация LLM клиента
+    init_llm(openrouter_api_key)
+    
     # Инициализация и запуск бота
-    await init_bot(token)
+    await init_bot(telegram_token)
     await start_polling()
 
 if __name__ == "__main__":
