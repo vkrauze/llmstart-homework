@@ -33,7 +33,7 @@ def init_llm(api_key: str, base_url: str = "https://openrouter.ai/api/v1") -> No
 
 async def generate_response(
     messages: List[Dict[str, str]], 
-    model: str = "anthropic/claude-3.5-sonnet", 
+    model: str = "qwen/qwen3-30b-a3b:free", 
     temperature: float = 0.7,
     max_tokens: int = 1000
 ) -> Optional[str]:
