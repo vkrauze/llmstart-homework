@@ -8,8 +8,8 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 
-from llm import generate_response
-from prompts import create_messages_for_llm
+from src.llm import generate_response
+from src.prompts import create_messages_for_llm
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
