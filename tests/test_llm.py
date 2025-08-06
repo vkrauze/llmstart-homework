@@ -48,34 +48,37 @@ async def test_generate_response_client_not_initialized():
 @pytest.mark.asyncio
 async def test_generate_response_success():
     """Тест успешной генерации ответа"""
-    # Создаем мок ответа от OpenAI
-    mock_response = MagicMock(spec=ChatCompletion)
-    mock_message = MagicMock(spec=ChatCompletionMessage)
-    mock_message.content = "Это тестовый ответ от LLM"
-    mock_choice = MagicMock()
-    mock_choice.message = mock_message
-    mock_response.choices = [mock_choice]
+    # Создаем мок для ответа от OpenAI
+    test_response_text = "Это тестовый ответ от LLM"
     
-    # Создаем мок клиента
+    # Создаем мок для клиента OpenAI
     mock_client = MagicMock()
-    # Создаем корутину, которая возвращает mock_response
-    async def mock_create(*args, **kwargs):
-        return mock_response
+    
+    # Создаем мок для метода create, который возвращает объект с нужной структурой
+    def mock_create(*args, **kwargs):
+        mock_completion = MagicMock()
+        mock_choice = MagicMock()
+        mock_message = MagicMock()
+        mock_message.content = test_response_text
+        mock_choice.message = mock_message
+        mock_completion.choices = [mock_choice]
+        return mock_completion
+    
+    # Устанавливаем мок для метода create
     mock_client.chat.completions.create = mock_create
     
+    # Патчим глобальную переменную client
     with patch("src.llm.client", mock_client):
         messages = [{"role": "user", "content": "Привет!"}]
         model = "test-model"
         temperature = 0.5
         max_tokens = 500
         
+        # Вызываем тестируемую функцию
         result = await generate_response(messages, model, temperature, max_tokens)
         
-                    # В этом случае мы не можем проверить вызов метода create,
-            # так как мы заменили его на корутину
-        
         # Проверяем результат
-        assert result == "Это тестовый ответ от LLM"
+        assert result == test_response_text
 
 
 @pytest.mark.asyncio
@@ -84,8 +87,8 @@ async def test_generate_response_exception():
     # Создаем мок клиента, который вызывает исключение
     mock_client = MagicMock()
     
-    # Создаем корутину, которая вызывает исключение
-    async def mock_create_exception(*args, **kwargs):
+    # Создаем функцию, которая вызывает исключение
+    def mock_create_exception(*args, **kwargs):
         raise Exception("Test exception")
     
     mock_client.chat.completions.create = mock_create_exception
