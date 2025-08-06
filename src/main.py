@@ -10,12 +10,18 @@ from dotenv import load_dotenv
 from src.bot import init_bot, start_polling
 from src.llm import init_llm
 
-# Загрузка переменных окружения из .env файла
-import os.path
-env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
-print(f"Ищем .env файл по пути: {env_path}, существует: {os.path.exists(env_path)}")
-load_dotenv(dotenv_path=env_path)
-print(f"Загружаем .env файл, TELEGRAM_BOT_TOKEN = {os.getenv('TELEGRAM_BOT_TOKEN')}")
+# Загрузка переменных окружения
+# Сначала проверяем наличие переменных в системном окружении
+telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
+openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
+
+# Если переменные не найдены в системном окружении, пробуем загрузить из .env файла
+if not telegram_token or not openrouter_api_key:
+    import os.path
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(dotenv_path=env_path)
+        print(f"Загружены переменные из .env файла")
 
 # Настройка логирования
 log_level = os.getenv("LOG_LEVEL", "INFO")
@@ -32,23 +38,15 @@ async def main() -> None:
     # Получение токена Telegram из переменных окружения
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not telegram_token:
-        # Если токен не найден в .env, предложим ввести его вручную
-        logger.warning("Токен бота не найден в .env файле")
-        print("Введите токен Telegram бота:")
-        telegram_token = input()
-        if not telegram_token:
-            logger.error("Токен не был введен")
-            return
+        # Если токен не найден, выводим ошибку и завершаем работу
+        logger.error("Токен бота не найден в переменных окружения")
+        return
     
     # Получение API ключа OpenRouter
     openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
     if not openrouter_api_key:
-        logger.warning("API ключ OpenRouter не найден в .env файле")
-        print("Введите API ключ OpenRouter:")
-        openrouter_api_key = input()
-        if not openrouter_api_key:
-            logger.error("API ключ OpenRouter не был введен")
-            return
+        logger.error("API ключ OpenRouter не найден в переменных окружения")
+        return
     
     # Инициализация LLM клиента
     init_llm(openrouter_api_key)

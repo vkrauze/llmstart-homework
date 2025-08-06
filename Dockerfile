@@ -17,8 +17,5 @@ RUN pip install -e .
 # Создание директории для логов
 RUN mkdir -p logs
 
-# Создание файла .env (будет заполнен при запуске)
-RUN touch .env
-
 # Запуск приложения
 CMD ["python", "src/main.py"]
