@@ -48,8 +48,20 @@ def create_messages_for_llm(user_message: str, chat_id: Optional[int] = None) ->
     """
     messages = []
     
+    # Определяем стиль ответа на основе сообщения пользователя и его предпочтений
+    if chat_id is not None:
+        from src.styles import get_user_style, load_style_prompt
+        
+        # Определяем стиль для текущего сообщения
+        style = get_user_style(chat_id, user_message)
+        
+        # Загружаем системный промпт для определенного стиля
+        system_prompt = load_style_prompt(style)
+    else:
+        # Если chat_id не указан, используем стандартный промпт
+        system_prompt = load_system_prompt()
+    
     # Добавляем системный промпт
-    system_prompt = load_system_prompt()
     if system_prompt:
         messages.append({
             "role": "system",

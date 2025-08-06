@@ -3,7 +3,7 @@
 """
 Функции для работы с памятью диалогов
 """
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Set
 import logging
 import datetime
 
@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 # Глобальный словарь для хранения диалогов
 # Ключ - идентификатор чата (chat_id), значение - список сообщений
 dialogs = {}
+
+# Множество для отслеживания чатов, где уже было первое сообщение от бота
+first_bot_message_sent: Set[int] = set()
 
 def add_message(chat_id: int, role: str, content: str) -> None:
     """
@@ -38,6 +41,11 @@ def add_message(chat_id: int, role: str, content: str) -> None:
     
     dialogs[chat_id].append(message)
     logger.debug(f"Добавлено сообщение для чата {chat_id}: {role}")
+    
+    # Отмечаем, что для этого чата было отправлено сообщение от бота
+    if role == "assistant" and chat_id not in first_bot_message_sent:
+        first_bot_message_sent.add(chat_id)
+        logger.info(f"Отмечено первое сообщение от бота для чата {chat_id}")
 
 def get_dialog_history(chat_id: int, max_messages: int = 10) -> List[Dict[str, Any]]:
     """
@@ -93,3 +101,20 @@ def clear_dialog_history(chat_id: int) -> None:
     if chat_id in dialogs:
         dialogs[chat_id] = []
         logger.info(f"История диалога для чата {chat_id} очищена")
+    
+    # Также удаляем информацию о первом сообщении
+    if chat_id in first_bot_message_sent:
+        first_bot_message_sent.remove(chat_id)
+        logger.info(f"Сброшена информация о первом сообщении для чата {chat_id}")
+
+def is_first_bot_message(chat_id: int) -> bool:
+    """
+    Проверяет, было ли уже отправлено первое сообщение от бота для данного чата
+    
+    Args:
+        chat_id: Идентификатор чата
+        
+    Returns:
+        True, если это первое сообщение от бота, иначе False
+    """
+    return chat_id not in first_bot_message_sent

@@ -17,12 +17,13 @@ from src.memory import add_message, clear_dialog_history
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def handle_start_command(message: types.Message) -> None:
+async def handle_start_command(message: types.Message, style_badge: str = None) -> None:
     """
     Обрабатывает команду /start, реализуя сценарий приветствия
     
     Args:
         message: Сообщение пользователя с командой /start
+        style_badge: HTML-метка текущего стиля (опционально)
     """
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -44,6 +45,10 @@ async def handle_start_command(message: types.Message) -> None:
         # Добавляем кликабельные ссылки в ответ
         formatted_response = add_clickable_links(response)
         
+        # Добавляем метку стиля, если она предоставлена
+        if style_badge:
+            formatted_response = f"{style_badge}\n\n{formatted_response}"
+            
         # Отправляем приветственное сообщение с поддержкой HTML-форматирования
         await message.answer(formatted_response, parse_mode="HTML")
         
@@ -55,6 +60,11 @@ async def handle_start_command(message: types.Message) -> None:
         # В случае ошибки отправляем стандартное приветствие с кликабельной ссылкой
         website_link = hlink("нашем сайте", "https://technoservice.ru")
         default_greeting = f"Здравствуйте, {user_name}! Я ассистент компании ООО \"ТехноСервис\". Мы специализируемся на IT-консалтинге и разработке программного обеспечения. Более подробную информацию о наших услугах вы можете узнать на {website_link}. Чем я могу вам помочь?"
+        
+        # Добавляем метку стиля, если она предоставлена
+        if style_badge:
+            default_greeting = f"{style_badge}\n\n{default_greeting}"
+            
         await message.answer(default_greeting, parse_mode="HTML")
         
         # Сохраняем стандартное приветствие в историю (без HTML-тегов)
@@ -62,13 +72,14 @@ async def handle_start_command(message: types.Message) -> None:
         
         logger.error(f"Ошибка при получении приветственного сообщения от LLM для пользователя {user_id}")
 
-async def handle_service_inquiry(message: types.Message, service_type: Optional[str] = None) -> None:
+async def handle_service_inquiry(message: types.Message, service_type: Optional[str] = None, style_badge: str = None) -> None:
     """
     Обрабатывает запрос о услугах компании
     
     Args:
         message: Сообщение пользователя
         service_type: Тип услуги, если удалось определить
+        style_badge: HTML-метка текущего стиля (опционально)
     """
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -92,6 +103,10 @@ async def handle_service_inquiry(message: types.Message, service_type: Optional[
         # Добавляем кликабельные ссылки в ответ
         formatted_response = add_clickable_links(response)
         
+        # Добавляем метку стиля, если она предоставлена
+        if style_badge:
+            formatted_response = f"{style_badge}\n\n{formatted_response}"
+            
         # Отправляем ответ пользователю с поддержкой HTML-форматирования
         await message.answer(formatted_response, parse_mode="HTML")
         
@@ -103,6 +118,11 @@ async def handle_service_inquiry(message: types.Message, service_type: Optional[
         # В случае ошибки отправляем стандартный ответ
         contact_link = hlink("свяжитесь с менеджером", "https://t.me/manager_technoservice")
         default_response = f"Извините, произошла ошибка. Пожалуйста, уточните ваш вопрос или {contact_link}."
+        
+        # Добавляем метку стиля, если она предоставлена
+        if style_badge:
+            default_response = f"{style_badge}\n\n{default_response}"
+            
         await message.answer(default_response, parse_mode="HTML")
         
         # Сохраняем стандартный ответ в историю (без HTML-тегов)
