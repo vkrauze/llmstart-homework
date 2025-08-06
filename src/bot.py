@@ -10,6 +10,7 @@ from aiogram.filters import Command
 
 from src.llm import generate_response
 from src.prompts import create_messages_for_llm
+from src.memory import add_message, clear_dialog_history
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -37,32 +38,53 @@ async def cmd_start(message: types.Message) -> None:
     """
     Обработчик команды /start
     """
-    await message.answer("Здравствуйте! Я ассистент компании ООО \"ТехноСервис\". Чем я могу вам помочь?")
-    logger.info(f"Пользователь {message.from_user.id} запустил бота")
+    welcome_message = "Здравствуйте! Я ассистент компании ООО \"ТехноСервис\". Чем я могу вам помочь?"
+    await message.answer(welcome_message)
+    
+    # Сохраняем приветственное сообщение в историю
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    
+    # Очищаем предыдущую историю диалога
+    clear_dialog_history(chat_id)
+    
+    # Добавляем системное сообщение и приветствие бота
+    add_message(chat_id, "assistant", welcome_message)
+    
+    logger.info(f"Пользователь {user_id} запустил бота")
 
 async def echo(message: types.Message) -> None:
     """
     Обработчик всех текстовых сообщений
     """
     user_id = message.from_user.id
+    chat_id = message.chat.id
     user_text = message.text
     
     logger.info(f"Пользователь {user_id} отправил сообщение: {user_text}")
     
     # Отправляем индикатор набора текста
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    await bot.send_chat_action(chat_id=chat_id, action="typing")
     
-    # Создаем сообщения для LLM
-    messages = create_messages_for_llm(user_text)
+    # Сохраняем сообщение пользователя в историю
+    add_message(chat_id, "user", user_text)
+    
+    # Создаем сообщения для LLM с учетом истории диалога
+    messages = create_messages_for_llm(user_text, chat_id)
     
     # Получаем ответ от LLM
     response = await generate_response(messages)
     
     if response:
+        # Отправляем ответ пользователю
         await message.answer(response)
         logger.info(f"Отправлен ответ LLM пользователю {user_id}")
+        
+        # Сохраняем ответ ассистента в историю
+        add_message(chat_id, "assistant", response)
     else:
-        await message.answer("Извините, произошла ошибка. Попробуйте позже или обратитесь к менеджеру.")
+        error_message = "Извините, произошла ошибка. Попробуйте позже или обратитесь к менеджеру."
+        await message.answer(error_message)
         logger.error(f"Ошибка при получении ответа от LLM для пользователя {user_id}")
 
 async def start_polling() -> None:

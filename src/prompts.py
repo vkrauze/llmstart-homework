@@ -35,12 +35,13 @@ def load_system_prompt() -> Optional[str]:
         logger.error(f"Ошибка при загрузке системного промпта: {e}")
         return None
 
-def create_messages_for_llm(user_message: str) -> List[Dict[str, str]]:
+def create_messages_for_llm(user_message: str, chat_id: Optional[int] = None) -> List[Dict[str, str]]:
     """
     Создает список сообщений для отправки в LLM API
     
     Args:
         user_message: Сообщение пользователя
+        chat_id: Идентификатор чата для получения истории диалога
         
     Returns:
         Список сообщений в формате [{role, content}]
@@ -55,7 +56,19 @@ def create_messages_for_llm(user_message: str) -> List[Dict[str, str]]:
             "content": system_prompt
         })
     
-    # Добавляем сообщение пользователя
+    # Добавляем историю диалога, если указан chat_id
+    if chat_id is not None:
+        from src.memory import get_dialog_messages_for_llm
+        history_messages = get_dialog_messages_for_llm(chat_id)
+        
+        # Добавляем только сообщения пользователя и ассистента из истории
+        for msg in history_messages:
+            if msg["role"] in ["user", "assistant"]:
+                messages.append(msg)
+                
+        logger.debug(f"Добавлено {len(history_messages)} сообщений из истории для чата {chat_id}")
+    
+    # Добавляем текущее сообщение пользователя
     messages.append({
         "role": "user",
         "content": user_message
