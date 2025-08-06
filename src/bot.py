@@ -49,11 +49,25 @@ async def cmd_start(message: types.Message) -> None:
     chat_id = message.chat.id
     logger.info(f"Пользователь {user_id} запустил бота")
     
-    # Сбрасываем стиль пользователя на обычный
-    reset_user_style(chat_id)
+    # Импортируем стили
+    from src.styles import get_user_style, user_styles
     
-    # Получаем метку для обычного стиля
-    style_badge = "🔹 <b>Обычный режим</b>"
+    # Определяем случайный стиль для первого сообщения
+    current_style = get_user_style(chat_id, message.text)
+    
+    # Сохраняем стиль для дальнейшего использования
+    user_styles[chat_id] = current_style
+    
+    # Цветные метки для разных стилей
+    style_badges = {
+        STYLE_NORMAL: "🔹 <b>Обычный режим</b>",
+        STYLE_CAT: "🐱 <b>Кошачий режим</b>",
+        STYLE_VILLAIN: "😈 <b>Злодейский режим</b>",
+        STYLE_DRAMATIC: "🎭 <b>Драматический режим</b>"
+    }
+    
+    # Получаем метку для выбранного стиля
+    style_badge = style_badges.get(current_style, style_badges[STYLE_CAT])
     
     # Используем сценарий приветствия
     await handle_start_command(message, style_badge=style_badge)
@@ -75,10 +89,14 @@ async def echo(message: types.Message) -> None:
     service_type = detect_service_type(user_text)
     
     # Импортируем стили
-    from src.styles import get_user_style, STYLE_NORMAL, STYLE_CAT, STYLE_VILLAIN, STYLE_DRAMATIC
+    from src.styles import user_styles, STYLE_NORMAL, STYLE_CAT, STYLE_VILLAIN, STYLE_DRAMATIC
     
-    # Определяем текущий стиль ответа
+    # Определяем стиль для текущего сообщения
+    # Важно: вызываем get_user_style перед созданием сообщений для LLM,
+    # чтобы badge соответствовал стилю, который будет использован для ответа
+    from src.styles import get_user_style
     current_style = get_user_style(chat_id, user_text)
+    user_styles[chat_id] = current_style
     
     # Цветные метки для разных стилей
     style_badges = {

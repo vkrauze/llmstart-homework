@@ -50,10 +50,11 @@ def create_messages_for_llm(user_message: str, chat_id: Optional[int] = None) ->
     
     # Определяем стиль ответа на основе сообщения пользователя и его предпочтений
     if chat_id is not None:
-        from src.styles import get_user_style, load_style_prompt
+        from src.styles import load_style_prompt, user_styles
         
-        # Определяем стиль для текущего сообщения
-        style = get_user_style(chat_id, user_message)
+        # Используем стиль, который уже был определен в bot.py
+        # Это гарантирует, что метка стиля соответствует содержимому ответа
+        style = user_styles.get(chat_id, "normal")
         
         # Загружаем системный промпт для определенного стиля
         system_prompt = load_style_prompt(style)
