@@ -7,8 +7,8 @@ import os
 import asyncio
 import logging
 from dotenv import load_dotenv
-from bot import init_bot, start_polling
-from llm import init_llm
+from src.bot import init_bot, start_polling
+from src.llm import init_llm
 
 # Загрузка переменных окружения из .env файла
 import os.path

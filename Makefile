@@ -1,11 +1,11 @@
 .PHONY: setup run test clean
 
 setup:
-	uv venv
+	uv venv --clear
 	uv pip install -e .
 
 run:
-	python src/main.py
+	.\.venv\Scripts\python src/main.py
 
 test:
 	.\.venv\Scripts\python -m pytest tests -v

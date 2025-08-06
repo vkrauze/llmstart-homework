@@ -40,7 +40,10 @@ async def test_echo_without_llm():
     message.chat.id = 123456789
     
     # Создаем мок для бота
-    with patch("src.bot.bot") as bot_mock, \
+    bot_mock = AsyncMock()
+    bot_mock.send_chat_action = AsyncMock()
+    
+    with patch("src.bot.bot", bot_mock), \
          patch("src.bot.create_messages_for_llm") as create_messages_mock, \
          patch("src.bot.generate_response", return_value=None) as generate_response_mock:
         
