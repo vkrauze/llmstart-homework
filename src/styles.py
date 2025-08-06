@@ -107,27 +107,23 @@ def get_user_style(chat_id: int, message_text: str) -> str:
     Returns:
         Название стиля (normal, cat, villain, dramatic)
     """
-    # Импортируем здесь, чтобы избежать циклических импортов
-    from src.memory import is_first_bot_message
-    
     # Пытаемся определить стиль из текущего сообщения
     detected_style = detect_style_from_text(message_text)
     
-    # Если стиль определен из сообщения, обновляем предпочтения пользователя
+    # Если стиль явно определен из сообщения (по ключевым словам), используем его
     if detected_style != STYLE_NORMAL:
         user_styles[chat_id] = detected_style
         return detected_style
     
-    # Если это первое сообщение от бота, используем обычный стиль
-    if is_first_bot_message(chat_id):
-        return STYLE_NORMAL
-    
-    # Если у пользователя уже есть сохраненный стиль, используем его
-    if chat_id in user_styles:
-        return user_styles[chat_id]
-    
-    # После первого сообщения выбираем случайный стиль
+    # Для каждого нового сообщения выбираем случайный стиль (исключая обычный)
     random_styles = [STYLE_CAT, STYLE_VILLAIN, STYLE_DRAMATIC]
+    
+    # Если у пользователя уже был стиль, исключаем его из выбора,
+    # чтобы стиль гарантированно менялся с каждым сообщением
+    if chat_id in user_styles and user_styles[chat_id] in random_styles:
+        random_styles.remove(user_styles[chat_id])
+    
+    # Выбираем новый случайный стиль из оставшихся
     random_style = random.choice(random_styles)
     user_styles[chat_id] = random_style
     logger.info(f"Случайно выбран стиль {random_style} для пользователя {chat_id}")
