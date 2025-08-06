@@ -1,4 +1,4 @@
-.PHONY: setup run test clean
+.PHONY: setup run test clean docker-build docker-run docker-stop
 
 setup:
 	uv venv --clear
@@ -12,3 +12,12 @@ test:
 
 clean:
 	if exist .venv rmdir /s /q .venv
+
+docker-build:
+	docker build -t telegram-llm-assistant .
+
+docker-run:
+	docker-compose up -d
+
+docker-stop:
+	docker-compose down
